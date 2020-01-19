@@ -54,7 +54,7 @@ app.get('/solve/:item', (req, res) => {
           if (err) res.sendStatus(401)
           else {
             if (!data.body.email_verified) res.sendStatus(401)
-            else { authData[code[0]].verfied = true; res.redirect('https://discord.gg/mpAJ3wS') }
+            else { authData[code[0]].google = data.body; authData[code[0]].verfied = true; res.redirect('https://discord.gg/mpAJ3wS') }
           }
         })
     }
