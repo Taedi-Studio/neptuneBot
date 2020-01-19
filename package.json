@@ -1,0 +1,43 @@
+{
+  "name": "neptune",
+  "version": "0.1.0",
+  "description": "Member Management Bot for Teaddy Studio Discord Server",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Teaddy-Studio/neptuneBot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "teaddy",
+    "teaddyStudio",
+    "node",
+    "nodejs"
+  ],
+  "author": "Teaddy Studio / PMH",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Teaddy-Studio/neptuneBot/issues"
+  },
+  "homepage": "https://github.com/Teaddy-Studio/neptuneBot#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "discord-oauth2": "^2.0.2",
+    "discord.js": "^11.5.1",
+    "ejs": "^3.0.1",
+    "express": "^4.17.1",
+    "superagent": "^5.2.1"
+  }
+}
