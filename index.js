@@ -50,13 +50,16 @@ app.get('/solve/:item', (req, res) => {
         break
 
       case 'google':
-        oauth = superagent.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + code[1], (err, data) => {
-          if (err) res.sendStatus(401)
-          else {
-            if (!data.body.email_verified) res.sendStatus(401)
-            else { authData[code[0]].google = data.body; authData[code[0]].verfied = true; res.redirect('https://discord.gg/mpAJ3wS') }
-          }
-        })
+        if (!Object.keys(authData).includes(code[0])) res.sendStatus(401)
+        else {
+          oauth = superagent.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + code[1], (err, data) => {
+            if (err) res.sendStatus(401)
+            else {
+              if (!data.body.email_verified) res.sendStatus(401)
+              else { authData[code[0]].google = data.body; authData[code[0]].verfied = true; res.redirect('https://discord.gg/mpAJ3wS') }
+            }
+          })
+        }
     }
   }
 })
