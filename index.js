@@ -1,6 +1,3 @@
-const PORT = process.env.neptPort || 8080
-const TOKEN = process.env.neptToken
-
 const { writeFileSync } = require('fs')
 const { renderFile } = require('ejs')
 const cors = require('cors')
@@ -13,7 +10,10 @@ const DiscordOAuth2 = require('discord-oauth2')
 const settings = require(path + '/settings.json')
 const authData = require(path + '/auth/authData.json')
 
-const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' + settings.clientId + '&redirect_uri=' + encodeURI(settings.redirectUri) + '&response_type=code&scope=' + settings.scope
+const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
+  settings.auth.clientId + '&redirect_uri=' +
+  encodeURI(settings.auth.redirectUri) +
+  '&response_type=code&scope=' + settings.auth.scope
 
 const app = express()
 const bot = new Client()
@@ -41,7 +41,7 @@ app.get('/solve/:item', (req, res) => {
     switch (item) {
       case 'discord':
         oauth = new DiscordOAuth2()
-        oauth.tokenRequest({ ...settings, code: code[0] }).then((data) => {
+        oauth.tokenRequest({ ...settings.auth, code: code[0] }).then((data) => {
           oauth.getUser(data.access_token).then((userData) => {
             authData[data.access_token] = { discord: userData, verfied: false }
             res.redirect('/login?key=' + data.access_token)
@@ -56,7 +56,13 @@ app.get('/solve/:item', (req, res) => {
             if (err) res.sendStatus(401)
             else {
               if (!data.body.email_verified) res.sendStatus(401)
-              else { authData[code[0]].google = data.body; authData[code[0]].verfied = true; res.redirect('https://discord.gg/mpAJ3wS') }
+              else {
+                authData[code[0]].google = data.body
+                authData[code[0]].verfied = true
+                bot.channels.get(settings.channelId)
+                  .send('<@' + authData[code[0]].discord.id + '> 님의 대한 인증이 완료되었습니다')
+                res.redirect(settings.inviteUrl)
+              }
             }
           })
         }
@@ -64,20 +70,20 @@ app.get('/solve/:item', (req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log('Neptune Bot is not running on http://localhost:' + PORT)
+app.listen(settings.port, () => {
+  console.log('Neptune Bot is not running on http://localhost:' + settings.port)
 })
 
-bot.login(TOKEN)
+bot.login(settings.token)
   .then(() => {
-    setInterval(() => bot.guilds.get('667356618941530134').members.forEach((member) => {
+    setInterval(() => bot.guilds.get(settings.guildId).members.forEach((member) => {
       let verfied = false
       Object.keys(authData).forEach((key) => {
         if (member.id === authData[key].discord.id && authData[key].verfied) verfied = true
       })
 
-      if (verfied && !member.roles.has('668384405643067422')) member.addRole('668384405643067422')
-      if (!verfied && member.roles.has('668384405643067422')) member.removeRole('668384405643067422')
+      if (verfied && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
+      if (!verfied && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
     }), 1000)
   })
 
