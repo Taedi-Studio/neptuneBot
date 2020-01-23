@@ -3,9 +3,9 @@ function onSignIn (googleUser) {
   window.location.replace('/solve/google?code=' + [getParameterByName('key'), googleUser.getAuthResponse().id_token].join(';'))
 }
 
-function getParameterByName(name, url) {
+function getParameterByName (name, url) {
   if (!url) url = window.location.href
-  name = name.replace(/[\[\]]/g, '\\$&')
+  name = name.replace(/[[\]]/g, '\\$&')
   const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)')
   const results = regex.exec(url)
   if (!results) return null

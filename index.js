@@ -85,6 +85,14 @@ bot.login(settings.token)
       if (verfied && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
       if (!verfied && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
     }), 1000)
+
+    setInterval(() => {
+      let botCount = 0
+      bot.guilds.get(settings.guildId).members.forEach((member) => { if (member.user.bot) botCount++ })
+      bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.all).setName('All: ' + bot.guilds.get(settings.guildId).members.size)
+      bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.humans).setName('Humans: ' + (bot.guilds.get(settings.guildId).members.size - botCount))
+      bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.bots).setName('Bots: ' + botCount)
+    }, 1000)
   })
 
 setInterval(() => writeFileSync(path + '/auth/authData.json', JSON.stringify(authData)), 1000)
