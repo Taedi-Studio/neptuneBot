@@ -105,3 +105,6 @@ dist
 
 settings.json
 auth/
+
+# vim swap file
+*.swp
