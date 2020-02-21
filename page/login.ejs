@@ -4,7 +4,7 @@
     <title>Neptune - Login</title>
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -29,13 +29,17 @@
       <div class="login-title text-center">인증과정</div>
       <hr width="80px" />
       <div class="login-progress row">
-        <div class="col-sm-4 <%= key ? 'login-disable' : '' %> login-cards login-discord">
+        <div class="col-sm-4 login-cards login-discord">
           <div class="card">
             <h5 class="card-header">1. 디스코드 로그인</h5>
             <div class="card-body">
               <div class="card-title"><i class="fab fa-discord"></i></div>
+              <% if(!key) {%>
               <p class="card-text">디스코드 유저 식별을 위해 디스코드 로그인이 필요합니다</p>
               <a href="<%= authUrl %>" class="btn btn-discord"><i class="fab fa-discord"></i> Login</a>
+              <% } else { %>
+              <div class="card-text"><b><%= userData.username %>#<%= userData.discriminator %></b>으로 로그인되어 있어요. <a href="<%= authUrl %>">당신이 아닌가요?</a></div>
+              <% } %>
             </div>
           </div>
         </div>
@@ -45,11 +49,11 @@
             <div class="card-body">
               <div class="card-title"><i class="fab fa-google"></i></div>
               <p class="card-text">유저 인증을 위해 구글 계정 로그인이 필요합니다</p>
-              <div class="g-signin2" data-onsuccess="onSignIn"></div>
+              <div class="g-signin2" data-onsuccess=""></div>
             </div>
           </div>
         </div>
-        <div class="col-sm-4 login-disable login-cards login-finish">
+        <div class="col-sm-4 <%= !passedGoogleAuth ? 'login-disable' : '' %> login-cards login-finish">
           <div class="card">
             <h5 class="card-header">3. 인증 완료</h5>
             <div class="card-body">

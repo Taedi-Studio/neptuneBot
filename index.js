@@ -7,6 +7,8 @@ const { Client } = require('discord.js')
 const superagent = require('superagent')
 const DiscordOAuth2 = require('discord-oauth2')
 
+const authCheck = require('./auth')
+
 const settings = require(path + '/settings.json')
 const authData = require(path + '/auth/authData.json')
 
@@ -18,12 +20,22 @@ const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
 const app = express()
 const bot = new Client()
 
+const discordOAuth = new DiscordOAuth2()
+
 app.use(cors())
 app.use('/src', express.static(path + '/src'))
 
 app.get('/', (_req, res) => res.redirect('/login'))
-app.get('/login', (req, res) => {
-  renderFile(path + '/page/login.ejs', { key: req.query.key, authUrl, authData }, (err, str) => {
+app.get('/login', async (req, res) => {
+  let key = req.query.key
+  let userData = {}
+  try {
+    userData = await discordOAuth.getUser(key)
+  } catch(err) {
+    key = null
+  }
+  console.log(req.query)
+  renderFile(path + '/page/login.ejs', { key, authUrl, authData, userData, passedGoogleAuth: req.query.auth }, (err, str) => {
     if (err) console.log(err)
     else res.send(str)
   })
@@ -40,13 +52,15 @@ app.get('/solve/:item', (req, res) => {
     let oauth
     switch (item) {
       case 'discord':
-        oauth = new DiscordOAuth2()
-        oauth.tokenRequest({ ...settings.auth, code: code[0] }).then((data) => {
-          oauth.getUser(data.access_token).then((userData) => {
-            authData[data.access_token] = { discord: userData, verfied: false }
-            res.redirect('/login?key=' + data.access_token)
+        authCheck.discord(settings.auth, code, discordOAuth)
+          .then((returnData) => {
+            authData[returnData.token] = { discord: returnData.userData, verfied: false }
+            res.redirect('/login?key=' + returnData.token)
           })
-        })
+          .catch((err) => {
+            console.error(err)
+            res.sendStatus(500)
+          })
         break
 
       case 'google':
@@ -60,7 +74,7 @@ app.get('/solve/:item', (req, res) => {
                 authData[code[0]].google = data.body
                 authData[code[0]].verfied = true
                 bot.channels.get(settings.channelId)
-                  .send('<@' + authData[code[0]].discord.id + '> 님의 대한 인증이 완료되었습니다')
+                  .send('<@' + authData[code[0]].discord.id + '>님에 대한 인증이 완료되었습니다.')
                 res.redirect(settings.inviteUrl)
               }
             }
