@@ -34,7 +34,6 @@ app.get('/login', async (req, res) => {
   } catch(err) {
     key = null
   }
-  console.log(req.query)
   renderFile(path + '/page/login.ejs', { key, authUrl, authData, userData, passedGoogleAuth: req.query.auth }, (err, str) => {
     if (err) console.log(err)
     else res.send(str)
