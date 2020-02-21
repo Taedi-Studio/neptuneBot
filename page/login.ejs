@@ -38,7 +38,7 @@
               <p class="card-text">디스코드 유저 식별을 위해 디스코드 로그인이 필요합니다</p>
               <a href="<%= authUrl %>" class="btn btn-discord"><i class="fab fa-discord"></i> Login</a>
               <% } else { %>
-              <div class="card-text"><b><%= userData.username %>#<%= userData.discriminator %></b>으로 로그인되어 있어요. <a href="<%= authUrl %>">당신이 아닌가요?</a></div>
+              <div class="card-text"><b><%= discordData.username %>#<%= discordData.discriminator %></b>으로 로그인되어 있어요. <a href="<%= authUrl %>">당신이 아닌가요?</a></div>
               <% } %>
             </div>
           </div>
@@ -48,8 +48,12 @@
             <h5 class="card-header">2. 구글 로그인</h5>
             <div class="card-body">
               <div class="card-title"><i class="fab fa-google"></i></div>
+              <% if(!key[1]) { %>
               <p class="card-text">유저 인증을 위해 구글 계정 로그인이 필요합니다</p>
               <div class="g-signin2" data-onsuccess="onSignIn"></div>
+              <% } else { %>
+              <p class="card-text"><b><%= authData[key[0]].google.email %></b>으로 로그인되어 있어요. <a href="javascript:void(0)" onclick="googleSignOut()">당신이 아닌가요?</a></p>
+              <% } %>
             </div>
           </div>
         </div>
@@ -59,11 +63,12 @@
             <div class="card-body">
               <div class="card-title"><i class="fas fa-arrow-alt-circle-right"></i></div>
               <p class="card-text">인증 과정을 저장하고 서버에 적용합니다</p>
-              <a href="#" class="btn btn-primary"><i class="fas fa-arrow-alt-circle-right"></i> 적용!</a>
+              <a href="javascript:void(0)" class="btn btn-primary" onclick="submit()"><i class="fas fa-arrow-alt-circle-right"></i> 적용!</a>
             </div>
           </div>
       </div>
     </div>
     <script src="/src/js/login.js"></script>
+    <script src="https://apis.google.com/js/platform.js?onload=onGoogleLoad" async defer></script>
   </body>
 </html>

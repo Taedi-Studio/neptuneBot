@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 function onSignIn (googleUser) {
-  window.location.replace('/solve/google?code=' + [getParameterByName('key'), googleUser.getAuthResponse().id_token].join(';'))
+  if(getParameterByName('key')) window.location.replace('/solve/google?code=' + [getParameterByName('key'), googleUser.getAuthResponse().id_token].join(';'))
 }
 
 function getParameterByName (name, url) {
@@ -11,4 +11,19 @@ function getParameterByName (name, url) {
   if (!results) return null
   if (!results[2]) return ''
   return decodeURIComponent(results[2].replace(/\+/g, ' '))
+}
+
+function googleSignOut() {
+  gapi.auth2.getAuthInstance().signOut()
+  window.location.replace('/login?key=' + getParameterByName('key').split(';')[0])
+}
+
+function onGoogleLoad() {
+  gapi.load('auth2', function() {
+    gapi.auth2.init()
+  })
+}
+
+function submit() {
+  window.location.replace('/solve/submit?code=' + getParameterByName('key'))
 }

@@ -13,7 +13,6 @@ exports.discord = async (authData, code, oauthObj) => {
 exports.google = (token) => {
   return new Promise((r, j) => {
     superagent.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + token, (err, data) => {
-      console.trace()
       if (err) j()
       else {
         if (!data.body.email_verified) j()
