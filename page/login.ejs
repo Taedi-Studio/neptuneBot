@@ -34,7 +34,7 @@
             <h5 class="card-header">1. 디스코드 로그인</h5>
             <div class="card-body">
               <div class="card-title"><i class="fab fa-discord"></i></div>
-              <% if(!key) {%>
+              <% if(!key[0]) {%>
               <p class="card-text">디스코드 유저 식별을 위해 디스코드 로그인이 필요합니다</p>
               <a href="<%= authUrl %>" class="btn btn-discord"><i class="fab fa-discord"></i> Login</a>
               <% } else { %>
@@ -43,17 +43,17 @@
             </div>
           </div>
         </div>
-        <div class="col-sm-4 <%= !key ? 'login-disable' : '' %> login-cards login-google">
+        <div class="col-sm-4 <%= !key[0] ? 'login-disable' : '' %> login-cards login-google">
           <div class="card">
             <h5 class="card-header">2. 구글 로그인</h5>
             <div class="card-body">
               <div class="card-title"><i class="fab fa-google"></i></div>
               <p class="card-text">유저 인증을 위해 구글 계정 로그인이 필요합니다</p>
-              <div class="g-signin2" data-onsuccess=""></div>
+              <div class="g-signin2" data-onsuccess="onSignIn"></div>
             </div>
           </div>
         </div>
-        <div class="col-sm-4 <%= !passedGoogleAuth ? 'login-disable' : '' %> login-cards login-finish">
+        <div class="col-sm-4 <%= !key[1] ? 'login-disable' : '' %> login-cards login-finish">
           <div class="card">
             <h5 class="card-header">3. 인증 완료</h5>
             <div class="card-body">

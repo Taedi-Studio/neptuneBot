@@ -4,7 +4,6 @@ const cors = require('cors')
 const path = require('path').resolve()
 const express = require('express')
 const { Client } = require('discord.js')
-const superagent = require('superagent')
 const DiscordOAuth2 = require('discord-oauth2')
 
 const authCheck = require('./auth')
@@ -27,14 +26,14 @@ app.use('/src', express.static(path + '/src'))
 
 app.get('/', (_req, res) => res.redirect('/login'))
 app.get('/login', async (req, res) => {
-  let key = req.query.key
+  let key = req.query.key.split(';')
   let userData = {}
   try {
-    userData = await discordOAuth.getUser(key)
+    userData = await discordOAuth.getUser(key[0])
   } catch(err) {
-    key = null
+    key = []
   }
-  renderFile(path + '/page/login.ejs', { key, authUrl, authData, userData, passedGoogleAuth: req.query.auth }, (err, str) => {
+  renderFile(path + '/page/login.ejs', { key, authUrl, authData, userData }, (err, str) => {
     if (err) console.log(err)
     else res.send(str)
   })
@@ -65,20 +64,26 @@ app.get('/solve/:item', (req, res) => {
       case 'google':
         if (!Object.keys(authData).includes(code[0])) res.sendStatus(401)
         else {
-          oauth = superagent.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + code[1], (err, data) => {
-            if (err) res.sendStatus(401)
+          authCheck.google(code[1]).then((data) => {
+            if(!data) res.sendStatus(401)
             else {
-              if (!data.body.email_verified) res.sendStatus(401)
-              else {
-                authData[code[0]].google = data.body
-                authData[code[0]].verfied = true
-                bot.channels.get(settings.channelId)
-                  .send('<@' + authData[code[0]].discord.id + '>님에 대한 인증이 완료되었습니다.')
-                res.redirect(settings.inviteUrl)
-              }
+              authData[code[0]].google = data.body
+              authData[code[0]].verified = false
+              res.redirect('/login?key=' + code[0] + ';' + code[1])
             }
-          })
+          }).catch(() => { res.sendStatus(401) })
         }
+        break
+      case 'submit':
+        if(code.length != 2) res.sendStatus(400)
+        else if(!(authData[code[0]] && authData[code[0]].discord && authData[code[0]].google)) res.sendStatus(401)
+        else {
+          authData[code[0]].verfied = true
+          bot.channels.get(settings.channelId)
+            .send('<@' + authData[code[0]].discord.id + '>님에 대한 인증이 완료되었습니다.')
+          res.redirect(settings.inviteUrl)
+        }
+        break
     }
   }
 })
