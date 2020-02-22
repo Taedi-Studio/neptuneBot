@@ -10,3 +10,12 @@ body, head {
   margin: 10vh auto;
 }
 
+@media screen and (min-width: 800px) {
+  .centerBox {
+    margin: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
