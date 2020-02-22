@@ -30,7 +30,7 @@ app.get('/login', async (req, res) => {
   let discordData = {}
   try {
     discordData = await discordOAuth.getUser(key[0])
-  } catch(err) {
+  } catch (err) {
     key = []
   }
   renderFile(path + '/page/login.ejs', { key, authUrl, authData, discordData }, (err, str) => {
@@ -59,11 +59,11 @@ app.get('/solve/:item', (req, res) => {
         break
 
       case 'google':
-        if(code.length != 2) res.redirect('/login')
+        if (code.length !== 2) res.redirect('/login')
         if (!Object.keys(authData).includes(code[0])) res.redirect('/login')
         else {
           authCheck.google(code[1]).then((data) => {
-            if(!data) res.sendStatus(401)
+            if (!data) res.sendStatus(401)
             else {
               authData[code[0]].google = data.body
               authData[code[0]].verified = false
@@ -73,8 +73,8 @@ app.get('/solve/:item', (req, res) => {
         }
         break
       case 'submit':
-        if(code.length != 2) res.sendStatus(400)
-        else if(!(authData[code[0]] && authData[code[0]].discord && authData[code[0]].google)) res.sendStatus(401)
+        if (code.length !== 2) res.sendStatus(400)
+        else if (!(authData[code[0]] && authData[code[0]].discord && authData[code[0]].google)) res.sendStatus(401)
         else {
           authData[code[0]].verfied = true
           bot.channels.get(settings.channelId)
