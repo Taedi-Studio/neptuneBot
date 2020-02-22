@@ -30,7 +30,7 @@ app.get('/login', async (req, res) => {
   let discordData = {}
   try {
     discordData = await discordOAuth.getUser(key[0])
-  } catch (err) {
+  } catch(err) {
     key = []
   }
   renderFile(path + '/page/login.ejs', { key, authUrl, authData, discordData }, (err, str) => {
@@ -50,7 +50,7 @@ app.get('/solve/:item', (req, res) => {
     switch (item) {
       case 'discord':
         authCheck.discord(settings.auth, code, discordOAuth).then((returnData) => {
-          authData[returnData.token] = { discord: returnData.userData, verfied: false }
+          authData[returnData.token] = { discord: returnData.userData, verified: false }
           res.redirect('/login?key=' + returnData.token)
         }).catch((err) => {
           console.error(err)
@@ -59,11 +59,11 @@ app.get('/solve/:item', (req, res) => {
         break
 
       case 'google':
-        if (code.length !== 2) res.redirect('/login')
+        if(code.length != 2) res.redirect('/login')
         if (!Object.keys(authData).includes(code[0])) res.redirect('/login')
         else {
           authCheck.google(code[1]).then((data) => {
-            if (!data) res.sendStatus(401)
+            if(!data) res.sendStatus(401)
             else {
               authData[code[0]].google = data.body
               authData[code[0]].verified = false
@@ -73,10 +73,10 @@ app.get('/solve/:item', (req, res) => {
         }
         break
       case 'submit':
-        if (code.length !== 2) res.sendStatus(400)
-        else if (!(authData[code[0]] && authData[code[0]].discord && authData[code[0]].google)) res.sendStatus(401)
+        if(code.length != 2) res.sendStatus(400)
+        else if(!(authData[code[0]] && authData[code[0]].discord && authData[code[0]].google)) res.sendStatus(401)
         else {
-          authData[code[0]].verfied = true
+          authData[code[0]].verified = true
           bot.channels.get(settings.channelId)
             .send('<@' + authData[code[0]].discord.id + '>님의 인증이 완료되었습니다.')
           res.redirect(settings.inviteUrl)
@@ -93,13 +93,13 @@ app.listen(settings.port, () => {
 bot.login(settings.token)
   .then(() => {
     setInterval(() => bot.guilds.get(settings.guildId).members.forEach((member) => {
-      let verfied = false
+      let verified = false
       Object.keys(authData).forEach((key) => {
-        if (member.id === authData[key].discord.id && authData[key].verfied) verfied = true
+        if (member.id === authData[key].discord.id && authData[key].verified) verified = true
       })
 
-      if (verfied && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
-      if (!verfied && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
+      if (verified && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
+      if (!verified && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
     }), 1000)
 
     setInterval(() => {
@@ -111,4 +111,4 @@ bot.login(settings.token)
     }, 1000)
   })
 
-setInterval(() => writeFileSync(path + '/auth/authData.json', JSON.stringify(authData)), 1000)
+setInterval(() => {writeFileSync(path + '/auth/authData.json', JSON.stringify(authData))}, 1000)
