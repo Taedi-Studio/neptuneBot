@@ -42,10 +42,11 @@ app.get('/login', async (req, res) => {
 app.get('/solve', (_req, res) => res.send({ items: ['discord', 'google'] }))
 app.get('/solve/:item', (req, res) => {
   const { item } = req.params
-  let { code } = req.query
+  let code = req.query.code || ''
+
   code = code.split(';')
 
-  if (!code) res.sendStatus(401)
+  if (code[0].length <= 0) res.redirect('/login')
   else {
     switch (item) {
       case 'discord':
