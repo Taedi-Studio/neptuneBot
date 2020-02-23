@@ -4,8 +4,9 @@ const cors = require('cors')
 const path = require('path').resolve()
 const express = require('express')
 const { Client } = require('discord.js')
-const superagent = require('superagent')
 const DiscordOAuth2 = require('discord-oauth2')
+
+const authCheck = require('./auth')
 
 const settings = require(path + '/settings.json')
 const authData = require(path + '/auth/authData.json')
@@ -18,12 +19,21 @@ const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
 const app = express()
 const bot = new Client()
 
+const discordOAuth = new DiscordOAuth2()
+
 app.use(cors())
 app.use('/src', express.static(path + '/src'))
 
 app.get('/', (_req, res) => res.redirect('/login'))
-app.get('/login', (req, res) => {
-  renderFile(path + '/page/login.ejs', { key: req.query.key, authUrl, authData }, (err, str) => {
+app.get('/login', async (req, res) => {
+  let key = req.query.key ? req.query.key.split(';') : []
+  let discordData = {}
+  try {
+    discordData = await discordOAuth.getUser(key[0])
+  } catch (err) {
+    key = []
+  }
+  renderFile(path + '/page/login.ejs', { key, authUrl, authData, discordData }, (err, str) => {
     if (err) console.log(err)
     else res.send(str)
   })
@@ -32,40 +42,47 @@ app.get('/login', (req, res) => {
 app.get('/solve', (_req, res) => res.send({ items: ['discord', 'google'] }))
 app.get('/solve/:item', (req, res) => {
   const { item } = req.params
-  let { code } = req.query
+  let code = req.query.code || ''
+
   code = code.split(';')
 
-  if (!code) res.sendStatus(401)
+  if (code[0].length <= 0) res.redirect('/login')
   else {
-    let oauth
     switch (item) {
       case 'discord':
-        oauth = new DiscordOAuth2()
-        oauth.tokenRequest({ ...settings.auth, code: code[0] }).then((data) => {
-          oauth.getUser(data.access_token).then((userData) => {
-            authData[data.access_token] = { discord: userData, verfied: false }
-            res.redirect('/login?key=' + data.access_token)
-          })
+        authCheck.discord(settings.auth, code, discordOAuth).then((returnData) => {
+          authData[returnData.token] = { discord: returnData.userData, verified: false }
+          res.redirect('/login?key=' + returnData.token)
+        }).catch((err) => {
+          console.error(err)
+          res.sendStatus(500)
         })
         break
 
       case 'google':
-        if (!Object.keys(authData).includes(code[0])) res.sendStatus(401)
+        if (code.length !== 2) res.redirect('/login')
+        if (!Object.keys(authData).includes(code[0])) res.redirect('/login')
         else {
-          oauth = superagent.get('https://oauth2.googleapis.com/tokeninfo?id_token=' + code[1], (err, data) => {
-            if (err) res.sendStatus(401)
+          authCheck.google(code[1]).then((data) => {
+            if (!data) res.sendStatus(401)
             else {
-              if (!data.body.email_verified) res.sendStatus(401)
-              else {
-                authData[code[0]].google = data.body
-                authData[code[0]].verfied = true
-                bot.channels.get(settings.channelId)
-                  .send('<@' + authData[code[0]].discord.id + '> 님의 대한 인증이 완료되었습니다')
-                res.redirect(settings.inviteUrl)
-              }
+              authData[code[0]].google = data.body
+              authData[code[0]].verified = false
+              res.redirect('/login?key=' + code[0] + ';' + code[1])
             }
-          })
+          }).catch(() => { res.sendStatus(401) })
         }
+        break
+      case 'submit':
+        if (code.length !== 2) res.sendStatus(400)
+        else if (!(authData[code[0]] && authData[code[0]].discord && authData[code[0]].google)) res.sendStatus(401)
+        else {
+          authData[code[0]].verified = true
+          bot.channels.get(settings.channelId)
+            .send('<@' + authData[code[0]].discord.id + '>님의 인증이 완료되었습니다.')
+          res.redirect(settings.inviteUrl)
+        }
+        break
     }
   }
 })
@@ -77,13 +94,13 @@ app.listen(settings.port, () => {
 bot.login(settings.token)
   .then(() => {
     setInterval(() => bot.guilds.get(settings.guildId).members.forEach((member) => {
-      let verfied = false
+      let verified = false
       Object.keys(authData).forEach((key) => {
-        if (member.id === authData[key].discord.id && authData[key].verfied) verfied = true
+        if (member.id === authData[key].discord.id && authData[key].verified) verified = true
       })
 
-      if (verfied && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
-      if (!verfied && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
+      if (verified && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
+      if (!verified && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
     }), 1000)
 
     setInterval(() => {
@@ -95,4 +112,4 @@ bot.login(settings.token)
     }, 1000)
   })
 
-setInterval(() => writeFileSync(path + '/auth/authData.json', JSON.stringify(authData)), 1000)
+setInterval(() => { writeFileSync(path + '/auth/authData.json', JSON.stringify(authData)) }, 1000)
