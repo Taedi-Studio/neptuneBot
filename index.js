@@ -19,7 +19,9 @@ const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
 
 const app = express()
 const bot = new Client()
-const ssl = { cert: readFileSync(path + '/auth/teaddy-cert.pem'), key: readFileSync(path + '/auth/teaddy-key.pem') }
+
+let ssl
+if(!settings.development) ssl = { cert: readFileSync(path + '/auth/teaddy-cert.pem'), key: readFileSync(path + '/auth/teaddy-key.pem') }
 
 const discordOAuth = new DiscordOAuth2()
 
@@ -89,7 +91,10 @@ app.get('/solve/:item', (req, res) => {
   }
 })
 
-https.createServer(ssl, app).listen(settings.port, () => {
+let server
+if(settings.development) server = app
+else server = https.createServer(ssl, app)
+server.listen(settings.port, () => {
   console.log('Neptune Bot is not running on http://localhost:' + settings.port)
 })
 
