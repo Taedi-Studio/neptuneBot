@@ -1,0 +1,21 @@
+{
+  "auth": {
+    "clientId": "",
+    "clientSecret": "",
+    "redirectUri": "",
+    "scope": "",
+    "grantType": ""
+  },
+  "statsChannel": {
+    "all": "",
+    "humans": "",
+    "bots": ""
+  },
+  "guildId": "",
+  "channelId": "",
+  "roleId": "",
+  "inviteUrl": "",
+  "token": "",
+  "development": false,
+  "port": ""
+}
