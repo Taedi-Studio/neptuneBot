@@ -17,5 +17,9 @@
   "inviteUrl": "",
   "token": "",
   "development": false,
-  "port": ""
+  "port": "",
+  "features": {
+    "verifiedCheck": true,
+    "serverStatus": true
+  }
 }
