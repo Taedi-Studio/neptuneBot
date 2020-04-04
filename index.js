@@ -12,6 +12,10 @@ const authCheck = require('./auth')
 const settings = require(path + '/settings.json')
 const authData = require(path + '/auth/authData.json')
 
+if(!settings.features) settings.features = {}
+if(settings.features.serverStatus == null) settings.features.serverStatus = true
+if(settings.features.verifiedCheck == null) settings.features.verifiedCheck = true
+
 const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
   settings.auth.clientId + '&redirect_uri=' +
   encodeURI(settings.auth.redirectUri) +
@@ -100,23 +104,29 @@ server.listen(settings.port, () => {
 
 bot.login(settings.token)
   .then(() => {
-    setInterval(() => bot.guilds.get(settings.guildId).members.forEach((member) => {
-      let verified = false
-      Object.keys(authData).forEach((key) => {
-        if (member.id === authData[key].discord.id && authData[key].verified) verified = true
-      })
+    if(settings.features.verifiedCheck) {
+      console.log('Verification Check Enabled.')
+      setInterval(() => bot.guilds.get(settings.guildId).members.forEach((member) => {
+        let verified = false
+        Object.keys(authData).forEach((key) => {
+          if (member.id === authData[key].discord.id && authData[key].verified) verified = true
+        })
 
-      if (verified && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
-      if (!verified && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
-    }), 1000)
+        if (verified && !member.roles.has(settings.roleId)) member.addRole(settings.roleId)
+        if (!verified && member.roles.has(settings.roleId)) member.removeRole(settings.roleId)
+      }), 1000)
+    }
 
-    setInterval(() => {
-      let botCount = 0
-      bot.guilds.get(settings.guildId).members.forEach((member) => { if (member.user.bot) botCount++ })
-      bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.all).setName('All: ' + bot.guilds.get(settings.guildId).members.size)
-      bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.humans).setName('Humans: ' + (bot.guilds.get(settings.guildId).members.size - botCount))
-      bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.bots).setName('Bots: ' + botCount)
-    }, 1000)
+    if(settings.features.serverStatus) {
+      console.log('Server Status display enabled.')
+      setInterval(() => {
+        let botCount = 0
+        bot.guilds.get(settings.guildId).members.forEach((member) => { if (member.user.bot) botCount++ })
+        bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.all).setName('All: ' + bot.guilds.get(settings.guildId).members.size)
+        bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.humans).setName('Humans: ' + (bot.guilds.get(settings.guildId).members.size - botCount))
+        bot.guilds.get(settings.guildId).channels.get(settings.statsChannel.bots).setName('Bots: ' + botCount)
+      }, 1000)
+    }
   })
 
 setInterval(() => { writeFileSync(path + '/auth/authData.json', JSON.stringify(authData)) }, 1000)
