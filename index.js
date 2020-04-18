@@ -8,13 +8,15 @@ const { Client } = require('discord.js')
 const DiscordOAuth2 = require('discord-oauth2')
 
 const authCheck = require('./auth')
+// const pointModule = require('./modules/point')
+const commandModule = require('./modules/command')
 
 const settings = require(path + '/settings.json')
 const authData = require(path + '/auth/authData.json')
 
-if(!settings.features) settings.features = {}
-if(settings.features.serverStatus == null) settings.features.serverStatus = true
-if(settings.features.verifiedCheck == null) settings.features.verifiedCheck = true
+if (!settings.features) settings.features = {}
+if (settings.features.serverStatus == null) settings.features.serverStatus = true
+if (settings.features.verifiedCheck == null) settings.features.verifiedCheck = true
 
 const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
   settings.auth.clientId + '&redirect_uri=' +
@@ -24,8 +26,10 @@ const authUrl = 'https://discordapp.com/api/oauth2/authorize?client_id=' +
 const app = express()
 const bot = new Client()
 
+bot.settings = settings
+
 let ssl
-if(!settings.development) ssl = { cert: readFileSync(path + '/auth/teaddy-cert.pem'), key: readFileSync(path + '/auth/teaddy-key.pem') }
+if (!settings.development) ssl = { cert: readFileSync(path + '/auth/teaddy-cert.pem'), key: readFileSync(path + '/auth/teaddy-key.pem') }
 
 const discordOAuth = new DiscordOAuth2()
 
@@ -96,7 +100,7 @@ app.get('/solve/:item', (req, res) => {
 })
 
 let server
-if(settings.development) server = app
+if (settings.development) server = app
 else server = https.createServer(ssl, app)
 server.listen(settings.port, () => {
   console.log('Neptune Bot is not running on http://localhost:' + settings.port)
@@ -104,7 +108,7 @@ server.listen(settings.port, () => {
 
 bot.login(settings.token)
   .then(() => {
-    if(settings.features.verifiedCheck) {
+    if (settings.features.verifiedCheck) {
       console.log('Verification Check Enabled.')
       setInterval(() => bot.guilds.get(settings.guildId).members.forEach((member) => {
         let verified = false
@@ -117,7 +121,7 @@ bot.login(settings.token)
       }), 1000)
     }
 
-    if(settings.features.serverStatus) {
+    if (settings.features.serverStatus) {
       console.log('Server Status display enabled.')
       setInterval(() => {
         let botCount = 0
@@ -130,3 +134,18 @@ bot.login(settings.token)
   })
 
 setInterval(() => { writeFileSync(path + '/auth/authData.json', JSON.stringify(authData)) }, 1000)
+
+// Register Events
+bot.once('ready', () => {
+  commandModule.init(bot)
+})
+
+bot.on('message', (msg) => {
+  if (msg.author.bot || !msg.content) return
+  if (msg.content.startsWith(settings.prefix || '!')) {
+    // Commands
+    commandModule.run(msg, bot)
+  } else {
+    // Chatting Point
+  }
+})
